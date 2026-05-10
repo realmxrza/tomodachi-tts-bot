@@ -1,18 +1,15 @@
 # tomodachi-tts-bot
 
 A Discord TTS bot that uses [Talkmodachi](https://github.com/dylanpdx/talkmodachi) to make Miis from Tomodachi Life read your messages out loud in a voice channel.
-
-Each user gets their own voice that persists across sessions. You can tune it manually or pick from the six character types straight out of the game.
+You can customize the voice or choose a voice presets.
 
 ## Features
 
-- Reads every message in a designated text channel aloud while the bot is in a voice channel
-- Per-user voice profiles saved to disk
-- Six built-in presets matching Tomodachi Life's character types (Young Man, Young Woman, Adult Man, Adult Woman, Old Man, Old Woman)
-- Full manual control over pitch, speed, quality, tone, accent, and intonation
-- Tone switching — automatically cycles intonation 1→2→3→4 on each message for a more expressive delivery
-- Voice randomizer
-- Auto-disconnects when the last person leaves the voice channel
+- Reads every message in the voice channel where the bot is connected to
+- Six presets: Young Man, Young Woman, Adult Man, Adult Woman, Old Man, Old Woman
+- Full control over pitch, speed, quality, tone, accent, and intonation
+- Tone switching: switch intonation 1→2→3→4 on each message
+- Voice randomizer: randomize the voice settings
 
 ## Requirements
 
@@ -44,11 +41,11 @@ python bot.py
 
 | Command | Description |
 |---|---|
-| `/join` | Join your voice channel and enable TTS in the current text channel |
+| `/join` | Join your voice channel |
 | `/leave` | Leave the voice channel |
 | `/voice set` | Adjust any combination of pitch, speed, quality, tone, accent, intonation, language |
-| `/voice preset` | Apply a Tomodachi Life character preset |
-| `/voice toneswitch` | Toggle automatic intonation cycling per message |
+| `/voice preset` | Apply character preset |
+| `/voice toneswitch` | Toggle intonation switching per message |
 | `/voice randomize` | Randomize all voice settings |
 | `/voice show` | Show your current settings |
 | `/voice reset` | Reset to defaults |
@@ -65,4 +62,4 @@ The bot depends on the public Talkmodachi instance at `talkmodachi.dylanpdx.io`.
 
 ## Credits
 
-TTS powered by [Talkmodachi](https://github.com/dylanpdx/talkmodachi) by dylanpdx.
+[Talkmodachi](https://github.com/dylanpdx/talkmodachi) by dylanpdx.
