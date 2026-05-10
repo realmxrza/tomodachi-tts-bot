@@ -46,20 +46,13 @@ PRESETS: dict[str, dict] = {
     "oldf":   {"pitch": 67, "speed": 18, "quality": 69, "tone": 12, "accent": 42, "intonation": 1, "lang": "useng"},
 }
 
-# guild_id -> text_channel_id where TTS is active
 tts_channels: dict[int, int] = {}
 
-# guild_id -> asyncio.Queue of (wav_path, VoiceClient)
 audio_queues: dict[int, asyncio.Queue] = {}
 
-# guild_id -> running worker Task
 queue_tasks: dict[int, asyncio.Task] = {}
 
-# user_id -> current intonation index (0-3) for tone-switch cycling
 tone_switch_index: dict[str, int] = {}
-
-
-# ── persistence ──────────────────────────────────────────────────────────────
 
 def load_voices() -> dict:
     if os.path.exists(DATA_FILE):
@@ -77,8 +70,6 @@ def get_user_voice(user_id: str, voices: dict) -> dict:
     return {**DEFAULT_VOICE, **voices.get(user_id, {})}
 
 
-# ── audio queue ───────────────────────────────────────────────────────────────
-
 async def ensure_queue(guild_id: int) -> asyncio.Queue:
     if guild_id not in audio_queues:
         audio_queues[guild_id] = asyncio.Queue()
@@ -92,7 +83,7 @@ async def queue_worker(guild_id: int) -> None:
     while True:
         item = await queue.get()
 
-        if item is None:  # poison pill — stop worker
+        if item is None:
             queue.task_done()
             break
 
@@ -141,8 +132,6 @@ async def stop_queue(guild_id: int) -> None:
         await audio_queues[guild_id].put(None)
 
 
-# ── bot setup ─────────────────────────────────────────────────────────────────
-
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -165,25 +154,19 @@ async def on_voice_state_update(
     if voice_client is None or not voice_client.is_connected():
         return
 
-    # Only care about the channel the bot is currently in
     bot_channel = voice_client.channel
     if before.channel != bot_channel:
         return
 
-    # Check if anyone (non-bot) is still in the channel
     human_members = [m for m in bot_channel.members if not m.bot]
     if human_members:
         return
 
-    # Everyone left — auto-disconnect
     tts_channels.pop(guild.id, None)
     if voice_client.is_playing():
         voice_client.stop()
     await stop_queue(guild.id)
     await voice_client.disconnect()
-
-
-# ── TTS listener ──────────────────────────────────────────────────────────────
 
 @bot.event
 async def on_message(message: discord.Message) -> None:
@@ -206,7 +189,6 @@ async def on_message(message: discord.Message) -> None:
     uid = str(message.author.id)
     voice = get_user_voice(uid, voices)
 
-    # Tone-switch: cycle intonation 1→2→3→4→1→... per message
     if voice.get("tone_switch"):
         idx = tone_switch_index.get(uid, 0)
         intonation = (idx % 4) + 1
@@ -244,9 +226,6 @@ async def on_message(message: discord.Message) -> None:
         tmp.close()
 
     await enqueue_tts(guild_id, voice_client, tmp.name)
-
-
-# ── slash commands ────────────────────────────────────────────────────────────
 
 @bot.tree.command(name="join", description="Join your voice channel and enable TTS in this text channel")
 async def cmd_join(interaction: discord.Interaction) -> None:
@@ -292,8 +271,6 @@ async def cmd_leave(interaction: discord.Interaction) -> None:
     await voice_client.disconnect()
     await interaction.response.send_message(f"Left **{left_channel.name}**")
 
-
-# ── /voice command group ──────────────────────────────────────────────────────
 
 voice_group = app_commands.Group(name="voice", description="Manage your personal TTS voice settings")
 
