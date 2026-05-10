@@ -1,4 +1,3 @@
-# Railway / Nixpacks — installs FFmpeg automatically
 [phases.setup]
 nixPkgs = ["ffmpeg", "python311"]
 
