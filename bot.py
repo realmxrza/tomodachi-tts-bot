@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import random
+import re
 import tempfile
 
 import aiohttp
@@ -53,6 +54,38 @@ audio_queues: dict[int, asyncio.Queue] = {}
 queue_tasks: dict[int, asyncio.Task] = {}
 
 tone_switch_index: dict[str, int] = {}
+
+GIF_URL_RE = re.compile(
+    r"https?://\S*?(?:tenor\.com|giphy\.com|\.gif(?:\?\S*)?)\S*",
+    re.IGNORECASE,
+)
+CUSTOM_EMOJI_RE = re.compile(r"<a?:\w+:\d+>|:[A-Za-z0-9_]+:")
+UNICODE_EMOJI_RE = re.compile(
+    "["
+    "\U0001F1E0-\U0001F1FF"
+    "\U0001F300-\U0001F5FF"
+    "\U0001F600-\U0001F64F"
+    "\U0001F680-\U0001F6FF"
+    "\U0001F700-\U0001F77F"
+    "\U0001F780-\U0001F7FF"
+    "\U0001F800-\U0001F8FF"
+    "\U0001F900-\U0001F9FF"
+    "\U0001FA00-\U0001FA6F"
+    "\U0001FA70-\U0001FAFF"
+    "\U00002600-\U000026FF"
+    "\U00002700-\U000027BF"
+    "\U0000FE0F"
+    "]+",
+    flags=re.UNICODE,
+)
+
+
+def sanitize_for_tts(text: str) -> str:
+    text = GIF_URL_RE.sub("", text)
+    text = CUSTOM_EMOJI_RE.sub("", text)
+    text = UNICODE_EMOJI_RE.sub("", text)
+    return text.strip()
+
 
 def load_voices() -> dict:
     if os.path.exists(DATA_FILE):
@@ -168,6 +201,7 @@ async def on_voice_state_update(
     await stop_queue(guild.id)
     await voice_client.disconnect()
 
+
 @bot.event
 async def on_message(message: discord.Message) -> None:
     if message.author.bot or not message.guild:
@@ -181,7 +215,7 @@ async def on_message(message: discord.Message) -> None:
     if voice_client is None or not voice_client.is_connected():
         return
 
-    text = message.clean_content.strip()
+    text = sanitize_for_tts(message.clean_content)
     if not text:
         return
 
@@ -226,6 +260,7 @@ async def on_message(message: discord.Message) -> None:
         tmp.close()
 
     await enqueue_tts(guild_id, voice_client, tmp.name)
+
 
 @bot.tree.command(name="join", description="Join your voice channel and enable TTS in this text channel")
 async def cmd_join(interaction: discord.Interaction) -> None:
@@ -395,7 +430,7 @@ async def voice_toneswitch(interaction: discord.Interaction) -> None:
     uid = str(interaction.user.id)
     current = get_user_voice(uid, voices)
     current["tone_switch"] = not current.get("tone_switch", False)
-    tone_switch_index.pop(uid, None)  # reset cycle position when toggling
+    tone_switch_index.pop(uid, None)
     voices[uid] = current
     save_voices(voices)
     state = "**enabled**" if current["tone_switch"] else "**disabled**"
