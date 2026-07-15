@@ -80,10 +80,94 @@ UNICODE_EMOJI_RE = re.compile(
 )
 
 
+SLANG_MAP: dict[str, str] = {
+    "RN": "Right now",
+    "BTW": "By the way",
+    "AAF": "Always a friend",
+    "AAK": "Asleep at keyboard",
+    "AFK": "Away from keyboard",
+    "BRB": "Be right back",
+    "AAMOF": "As a matter of fact",
+    "FAQ": "Frequently asked questions",
+    "B2K": "Back to keyboard",
+    "BTK": "Back to keyboard",
+    "FACK": "Full acknowledge",
+    "AKA": "Also known as",
+    "FKA": "Formerly known as",
+    "FYI": "For your information",
+    "HF": "Have fun",
+    "GL": "Good luck",
+    "HTH": "Hope this helps",
+    "IDK": "I don't know",
+    "IOW": "In other words",
+    "IMO": "In my opinion",
+    "IMHO": "In my humble opinion",
+    "NNTR": "No need to reply",
+    "NRN": "No reply necessary",
+    "TBC": "To be continued",
+    "TIA": "Thanks in advance",
+    "TGIF": "Thank God it's Friday",
+    "TQ": "Thank you",
+    "TY": "Thank you",
+    "TQVM": "Thank you very much",
+    "TYT": "Take your time",
+    "TTYL": "Talk to you later",
+    "L8R": "Later",
+    "WFM": "Works for me",
+    "WRT": "With regard to",
+    "WTH": "What the hell",
+    "WTF": "What the fuck",
+    "YMMD": "You made my day",
+    "ICYMI": "In case you missed it",
+    "LMAO": "Laughing my ass off",
+    "OMG": "Oh my God",
+    "OMFG": "Oh my fucking God",
+    "WOL": "Wake on LAN",
+    "FPS": "Frames per second",
+    "CPS": "Clicks per second",
+    "DOS": "Disk operating system",
+    "DDOS": "Distributed Denial of Service",
+    "ILY": "I love you",
+    "GTG": "Got to go",
+    "BBL": "Be back later",
+    "GN": "Goodnight",
+    "GM": "Good morning",
+    "TS": "This shit",
+    "FR": "For real",
+    "IDC": "I don't care",
+    "LMK": "Let me know",
+    "TBH": "To be honest",
+    "SMH": "Shaking my head",
+    "IG": "I guess",
+    "IYKYK": "If you know, you know",
+    "AF": "As fuck",
+    "PLS": "Please",
+    "IRL": "In real life",
+    "JK": "Just kidding",
+    "PPL": "People",
+    "NGL": "Not gonna lie",
+    "IKR": "I know right",
+    "THX": "Thanks",
+    "HBD": "Happy Birthday",
+    "OMW": "On my way",
+    "OTW": "On the way",
+}
+
+SLANG_RE = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in SLANG_MAP) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def expand_slang(text: str) -> str:
+    return SLANG_RE.sub(lambda m: SLANG_MAP[m.group(0).upper()], text)
+
+
 def sanitize_for_tts(text: str) -> str:
     text = GIF_URL_RE.sub("", text)
     text = CUSTOM_EMOJI_RE.sub("", text)
     text = UNICODE_EMOJI_RE.sub("", text)
+    text = expand_slang(text)
     return text.strip()
 
 
