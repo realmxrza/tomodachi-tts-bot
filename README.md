@@ -2,8 +2,6 @@
 
 A Discord TTS bot that uses [Talkmodachi](https://github.com/dylanpdx/talkmodachi) to make Miis from Tomodachi Life read your messages out loud in a voice channel.
 
-[Invite bot to your server](https://discord.com/oauth2/authorize?client_id=1513048347655540746)
-
 ## Features
 
 - Reads every message in the voice channel where the bot is connected to
